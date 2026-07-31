@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 214445bd9f98ec54abbc3a1c34835ad8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - _recipeDatabase: {fileID: 11400000, guid: 2daa6f9c872a7a64db3fbb9a4fb26939, type: 2}
+  - _inventoryUI: {instanceID: 0}
+  - _craftRequestUI: {instanceID: 0}
+  - _executionUI: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
