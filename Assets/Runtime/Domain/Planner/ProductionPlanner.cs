@@ -26,19 +26,19 @@ namespace CraftPlanner.Domain.Planner
         {
             if (targetResource == null)
             {
-                return ProductionPlan.Error(PlanErrorType.InvalidTarget, "Target resource is null");
+                return ProductionPlan.Error(PlanErrorType.InvalidTarget, "Целевой ресурс не указан");
             }
 
             if (requiredAmount <= 0)
             {
-                return ProductionPlan.Error(PlanErrorType.InvalidTarget, "Required amount must be greater than 0");
+                return ProductionPlan.Error(PlanErrorType.InvalidTarget, "Требуемое количество должно быть больше 0");
             }
 
             if (_recipeDatabase.HasCyclicDependencies(out var cyclePath))
             {
                 var cycleStr = string.Join(" -> ", cyclePath);
                 return ProductionPlan.Error(PlanErrorType.CyclicDependency,
-                    $"Cyclic dependency detected: {cycleStr}");
+                    $"Обнаружена циклическая зависимость: {cycleStr}");
             }
 
             var workingInventory = _originalInventory.Snapshot();
@@ -59,8 +59,8 @@ namespace CraftPlanner.Domain.Planner
             if (!result)
             {
                 var errorPlan = ProductionPlan.Error(PlanErrorType.MissingBaseResource,
-                    $"Insufficient resources: {string.Join(", ", missingResources)}");
-                errorPlan.MissingBaseResources = missingResources;  // ← КЛЮЧЕВАЯ СТРОКА!
+                    $"Недостаточно ресурсов: {string.Join(", ", missingResources)}");
+                errorPlan.MissingBaseResources = missingResources;
                 return errorPlan;
             }
 
@@ -85,13 +85,13 @@ namespace CraftPlanner.Domain.Planner
         {
             if (depth > 100)
             {
-                missingResources.Add($"Maximum recursion depth exceeded for {resourceId}");
+                missingResources.Add($"Превышена максимальная глубина рекурсии для {resourceId}");
                 return false;
             }
 
             if (visited.Contains(resourceId))
             {
-                missingResources.Add($"Cyclic dependency detected: {resourceId}");
+                missingResources.Add($"Обнаружена циклическая зависимость: {resourceId}");
                 return false;
             }
 
@@ -112,11 +112,11 @@ namespace CraftPlanner.Domain.Planner
                 var resource = _recipeDatabase.GetResourceById(resourceId);
                 if (resource != null && resource.IsBase)
                 {
-                    missingResources.Add($"{resource.DisplayName} (need: {remaining})");
+                    missingResources.Add($"{resource.DisplayName} (требуется: {remaining})");
                 }
                 else
                 {
-                    missingResources.Add($"No recipe found for {resourceId}");
+                    missingResources.Add($"Рецепт не найден для {resourceId}");
                 }
                 visited.Remove(resourceId);
                 return false;
@@ -124,7 +124,7 @@ namespace CraftPlanner.Domain.Planner
 
             if (recipe.Result.IsBase)
             {
-                missingResources.Add($"{recipe.Result.DisplayName} (need: {remaining})");
+                missingResources.Add($"{recipe.Result.DisplayName} (требуется: {remaining})");
                 visited.Remove(resourceId);
                 return false;
             }
@@ -177,19 +177,17 @@ namespace CraftPlanner.Domain.Planner
         {
             if (depth > 100)
             {
-                missingResources.Add($"Maximum recursion depth exceeded for {resourceId}");
+                missingResources.Add($"Превышена максимальная глубина рекурсии для {resourceId}");
                 return false;
             }
 
             if (visited.Contains(resourceId))
             {
-                missingResources.Add($"Cyclic dependency detected: {resourceId}");
+                missingResources.Add($"Обнаружена циклическая зависимость: {resourceId}");
                 return false;
             }
 
             visited.Add(resourceId);
-
-            Debug.Log($"BuildPlanRecursiveForTarget: {resourceId}, requiredAmount={requiredAmount}");
 
             var recipe = _recipeDatabase.GetRecipeForResource(resourceId);
             if (recipe == null || !recipe.IsValid)
@@ -197,11 +195,11 @@ namespace CraftPlanner.Domain.Planner
                 var resource = _recipeDatabase.GetResourceById(resourceId);
                 if (resource != null && resource.IsBase)
                 {
-                    missingResources.Add($"{resource.DisplayName} (need: {requiredAmount})");
+                    missingResources.Add($"{resource.DisplayName} (требуется: {requiredAmount})");
                 }
                 else
                 {
-                    missingResources.Add($"No recipe found for {resourceId}");
+                    missingResources.Add($"Рецепт не найден для {resourceId}");
                 }
                 visited.Remove(resourceId);
                 return false;
@@ -209,23 +207,18 @@ namespace CraftPlanner.Domain.Planner
 
             if (recipe.Result.IsBase)
             {
-                missingResources.Add($"{recipe.Result.DisplayName} (need: {requiredAmount})");
+                missingResources.Add($"{recipe.Result.DisplayName} (требуется: {requiredAmount})");
                 visited.Remove(resourceId);
                 return false;
             }
 
-            // Для целевого ресурса мы ВСЕГДА производим requiredAmount
-            // НЕ вычитаем то, что уже есть в инвентаре
             var runs = Mathf.CeilToInt((float)requiredAmount / recipe.ResultCount);
-            Debug.Log($"  runs={runs}");
 
             foreach (var ingredient in recipe.Ingredients)
             {
                 if (ingredient.Resource == null) continue;
 
                 var totalNeeded = ingredient.Amount * runs;
-                Debug.Log($"  Ingredient {ingredient.Resource.DisplayName}: need {totalNeeded}");
-
                 if (!BuildPlanRecursive(
                     ingredient.Resource.Id,
                     totalNeeded,
@@ -248,7 +241,6 @@ namespace CraftPlanner.Domain.Planner
                 Order = operations.Count
             };
             operations.Add(operation);
-            Debug.Log($"  Added operation: {recipe.Result.DisplayName} x{runs}");
 
             var produced = recipe.ResultCount * runs;
             workingInventory.AddResource(recipe.Result, produced);

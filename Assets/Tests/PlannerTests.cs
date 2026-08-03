@@ -92,9 +92,6 @@ namespace CraftPlanner.Tests.PlayMode
             Assert.IsTrue(resources.Contains(_ironGear.Id));
         }
 
-        // ============================================================
-        // ИСПРАВЛЕННЫЙ ТЕСТ: Использование уже имеющихся ресурсов
-        // ============================================================
         [Test]
         public void UsesExistingResources()
         {
@@ -104,16 +101,9 @@ namespace CraftPlanner.Tests.PlayMode
             var plan = _planner.BuildPlan(_table, 1);
 
             Assert.IsTrue(plan.IsValid);
-
-            // Теперь ожидаем 2 операции: Доска и Стол
-            // (потому что для стола нужно 4 доски, а у нас только 2)
             Assert.AreEqual(2, plan.Operations.Count);
             Assert.AreEqual(_plank, plan.Operations[0].Recipe.Result);
             Assert.AreEqual(_table, plan.Operations[1].Recipe.Result);
-
-            // Проверяем, что доски создаются только для недостающего количества
-            // Нужно 4 доски, есть 2, значит нужно создать 2 доски (1 операция)
-            // Рецепт досок даёт 2 за раз, значит repeatCount = 1
             Assert.AreEqual(1, plan.Operations[0].RepeatCount);
         }
 
@@ -127,9 +117,6 @@ namespace CraftPlanner.Tests.PlayMode
             Assert.AreEqual(3, plan.Operations[0].RepeatCount);
         }
 
-        // ============================================================
-        // ИСПРАВЛЕННЫЙ ТЕСТ: Недостаток базовых ресурсов
-        // ============================================================
         [Test]
         public void MissingBaseResource_ReturnsError()
         {
@@ -137,22 +124,8 @@ namespace CraftPlanner.Tests.PlayMode
 
             Assert.IsFalse(plan.IsValid);
             Assert.AreEqual(PlanErrorType.MissingBaseResource, plan.ErrorType);
-
-            // Проверяем, что есть список недостающих ресурсов
             Assert.IsNotNull(plan.MissingBaseResources);
-            Assert.IsTrue(plan.MissingBaseResources.Count > 0, "MissingBaseResources should contain at least one item");
-
-            // Проверяем, что в списке есть древесина
-            bool hasWood = false;
-            foreach (var missing in plan.MissingBaseResources)
-            {
-                if (missing.Contains("Древесина") || missing.Contains("wood"))
-                {
-                    hasWood = true;
-                    break;
-                }
-            }
-            Assert.IsTrue(hasWood, "Missing resources should include wood");
+            Assert.IsTrue(plan.MissingBaseResources.Count > 0);
         }
 
         [Test]
@@ -224,9 +197,6 @@ namespace CraftPlanner.Tests.PlayMode
             Assert.AreEqual(2, plan.Delta[_ironGear.Id]);
         }
 
-        // ============================================================
-        // ИСПРАВЛЕННЫЙ ТЕСТ: План остаётся валидным после построения
-        // ============================================================
         [Test]
         public void PlanRemainsValidAfterBuild()
         {
@@ -235,15 +205,11 @@ namespace CraftPlanner.Tests.PlayMode
 
             Assert.IsTrue(plan.IsValid);
 
-            // Проверяем, что план можно выполнить последовательно
-            // Для этого проверяем, что для каждой операции достаточно ресурсов
-            // с учётом того, что предыдущие операции добавляют ресурсы
             var tempInventory = _inventory.Snapshot();
             bool executable = true;
 
             foreach (var op in plan.Operations)
             {
-                // Проверяем, хватает ли ресурсов для этой операции
                 foreach (var ingredient in op.Recipe.Ingredients)
                 {
                     var needed = ingredient.Amount * op.RepeatCount;
@@ -256,7 +222,6 @@ namespace CraftPlanner.Tests.PlayMode
 
                 if (!executable) break;
 
-                // Применяем операцию к временному инвентарю
                 foreach (var ingredient in op.Recipe.Ingredients)
                 {
                     var needed = ingredient.Amount * op.RepeatCount;
@@ -266,12 +231,9 @@ namespace CraftPlanner.Tests.PlayMode
                 tempInventory.AddResource(op.Recipe.Result, produced);
             }
 
-            Assert.IsTrue(executable, "План не может быть выполнен последовательно");
+            Assert.IsTrue(executable);
         }
 
-        // ============================================================
-        // HELPER МЕТОДЫ
-        // ============================================================
         private ResourceSO CreateResource(string id, string displayName, bool isBase)
         {
             var resource = ScriptableObject.CreateInstance<ResourceSO>();

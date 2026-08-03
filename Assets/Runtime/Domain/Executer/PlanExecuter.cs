@@ -10,6 +10,7 @@ using UnityEngine;
 namespace CraftPlanner.Domain.Executor
 {
     using Inventory = CraftPlanner.Domain.Inventory.Inventory;
+
     public enum ExecutionState
     {
         Idle,
@@ -70,19 +71,19 @@ namespace CraftPlanner.Domain.Executor
         {
             if (_state == ExecutionState.Running)
             {
-                Debug.LogWarning("Already executing another plan");
+                Debug.LogWarning("Уже выполняется другой план");
                 return false;
             }
 
             if (plan == null || !plan.IsValid)
             {
-                OnExecutionFailed?.Invoke("Plan is invalid");
+                OnExecutionFailed?.Invoke("План недействителен");
                 return false;
             }
 
             if (!IsPlanValid(plan))
             {
-                OnExecutionFailed?.Invoke("Plan is stale. Inventory has changed");
+                OnExecutionFailed?.Invoke("План устарел. Инвентарь изменился");
                 return false;
             }
 
@@ -136,7 +137,7 @@ namespace CraftPlanner.Domain.Executor
                 {
                     _state = ExecutionState.Failed;
                     OnStateChanged?.Invoke(_state);
-                    OnExecutionFailed?.Invoke("Insufficient resources to complete operation");
+                    OnExecutionFailed?.Invoke("Недостаточно ресурсов для выполнения операции");
                     yield break;
                 }
 
@@ -148,7 +149,6 @@ namespace CraftPlanner.Domain.Executor
             OnStateChanged?.Invoke(_state);
             OnPlanCompleted?.Invoke(_currentPlan);
 
-            // Reset state after completion
             ResetAfterExecution();
         }
 
@@ -158,9 +158,6 @@ namespace CraftPlanner.Domain.Executor
             _operationQueue = null;
             _currentOperation = null;
             _currentOperationProgress = 0f;
-
-            // Auto-reset to Idle after a short delay or on next action
-            // We keep Completed state for UI feedback, but allow new plans
         }
 
         private bool ApplyOperation(PlannedOperation operation)
