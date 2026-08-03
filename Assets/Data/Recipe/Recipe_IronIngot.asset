@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Recipe_IronIngot
+  m_EditorClassIdentifier: Assembly-CSharp:CraftPlanner.Data:RecipeSO
+  _result: {fileID: 11400000, guid: 5c69de054bb791c4681930d70d6aee04, type: 2}
+  _resultCount: 2
+  _ingredients:
+  - _resource: {fileID: 11400000, guid: fb1b5feede565e342ae47f8d99339730, type: 2}
+    _amount: 1
+  - _resource: {fileID: 11400000, guid: df07746836a57fd489ed34a54ae4f953, type: 2}
+    _amount: 1
+  _durationSeconds: 2
